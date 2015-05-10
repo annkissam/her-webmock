@@ -77,6 +77,7 @@ end
  * Test stub associations
  * Support more association stubs
  * test default_request_test_headers functionality
+ * make the stub methods included in a model just stubs that call out to the stub methods
  * Break out the stub components
 
 ## Development

@@ -5,10 +5,10 @@ require 'json'
 module Her
   module WebMock
     module Helper
-      def self.attributes_without_embedded_associations(object)
-        attributes = object.attributes.dup
+      def self.attributes_without_embedded_associations(klass, object)
+        attributes = object.respond_to?(:attributes) ? object.attributes.dup : object.dup
 
-        object.class.associations.each do |type, association_metadata_ary|
+        klass.associations.each do |type, association_metadata_ary|
           association_metadata_ary.each do |association_metadata|
             association = attributes.delete(association_metadata[:name])
 
@@ -18,19 +18,33 @@ module Her
 
         attributes
       end
+
+      def self.request_params(options = {})
+        request_params = {}
+
+        query_hash = options.fetch(:query, {})
+        request_params[:query] = query_hash unless query_hash.empty?
+
+        headers_hash = default_headers.merge(options.fetch(:headers, {}))
+        request_params[:headers] = headers_hash unless headers_hash.empty?
+
+        request_params
+      end
+
+      def self.default_headers
+        WebMock.config.default_request_test_headers
+      end
     end
 
     module Model
       include ::WebMock::API
 
-      def default_headers
-        WebMock.config.default_request_test_headers
-      end
+      def stub_associations(klass, object)
+        attributes = object.respond_to?(:attributes) ? object.attributes : object
 
-      def stub_associations(object)
-        object.class.associations.each do |type, association_metadata_ary|
+        klass.associations.each do |type, association_metadata_ary|
           association_metadata_ary.each do |association_metadata|
-            association = object.attributes[association_metadata[:name]]
+            association = attributes[association_metadata[:name]]
 
             if association
               case type
@@ -45,33 +59,61 @@ module Her
         end
       end
 
-      def stub_find(object, options = {})
-        model_class = object.class
+      def stub_create(object, options = {})
+        model_class = self
+        attributes = object.is_a?(Her::Model) ? Helper.attributes_without_embedded_associations(model_class, object) : object
 
-        response = {
-          model_class.parsed_root_element => Helper.attributes_without_embedded_associations(object)
-        }
+        fail "Must pass in an object with an id attribute" unless attributes[:id]
 
-        request_stub = stub_request(:get, model_class.use_api.base_uri + object.request_path).
+        if model_class.parsed_root_element
+          response = {
+            model_class.parsed_root_element => attributes
+          }
+        else
+          response = attributes
+        end
+
+        attributes_without_id = attributes.except(:id)
+
+        request_stub = stub_request(:post, model_class.use_api.base_uri + model_class.build_request_path(attributes_without_id)).
           to_return(body: JSON.generate(response), status: 200)
 
-        request_params = {}
-
-        query_hash = options.fetch(:query, {})
-        request_params[:query] = query_hash unless query_hash.empty?
-
-        headers_hash = default_headers.merge(options.fetch(:headers, {}))
-        request_params[:headers] = headers_hash unless headers_hash.empty?
-
+        request_params = Helper.request_params(options)
         request_stub.with(request_params) unless request_params.empty?
 
-        stub_associations(object)
+        if options[:stub_related]
+          stub_find(object)
+          stub_all([object])
+        end
+
+        stub_associations(model_class, object)
+      end
+
+      def stub_find(object, options = {})
+        model_class = self
+        attributes = object.is_a?(Her::Model) ? Helper.attributes_without_embedded_associations(model_class, object) : object
+
+        if model_class.parsed_root_element
+          response = {
+            model_class.parsed_root_element => attributes
+          }
+        else
+          response = attributes
+        end
+
+        request_stub = stub_request(:get, model_class.use_api.base_uri + model_class.build_request_path(attributes)).
+          to_return(body: JSON.generate(response), status: 200)
+
+        request_params = Helper.request_params(options)
+        request_stub.with(request_params) unless request_params.empty?
+
+        stub_associations(model_class, object)
       end
 
       def stub_all(collection, options = {})
-        model_class = collection.first.class
+        model_class = self
 
-        collection_attributes = collection.map { |object| Helper.attributes_without_embedded_associations(object) }
+        collection_attributes = collection.map { |object| Helper.attributes_without_embedded_associations(model_class, object) }
         response = {
           model_class.pluralized_parsed_root_element => collection_attributes
         }
@@ -79,17 +121,10 @@ module Her
         request_stub = stub_request(:get, model_class.use_api.base_uri + model_class.collection_path).
           to_return(body: JSON.generate(response), status: 200)
 
-        request_params = {}
-
-        query_hash = options.fetch(:query, {})
-        request_params[:query] = query_hash unless query_hash.empty?
-
-        headers_hash = default_headers.merge(options.fetch(:headers, {}))
-        request_params[:headers] = headers_hash unless headers_hash.empty?
-
+        request_params = Helper.request_params(options)
         request_stub.with(request_params) unless request_params.empty?
 
-        collection.each { |object| stub_associations(object) }
+        collection.each { |object| stub_associations(model_class, object) }
       end
     end
   end

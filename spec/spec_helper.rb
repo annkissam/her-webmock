@@ -4,6 +4,12 @@ require 'her/webmock/model'
 
 require "her"
 
+RSpec.configure do |config|
+  config.after do
+    WebMock.reset!
+  end
+end
+
 Her::API.setup url: "http://api.example.com/" do |c|
   c.use Her::Middleware::DefaultParseJSON
 
