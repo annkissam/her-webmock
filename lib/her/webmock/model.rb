@@ -22,8 +22,7 @@ module Her
       def self.request_params(options = {})
         request_params = {}
 
-        query_hash = options.fetch(:query, {})
-        request_params[:query] = query_hash unless query_hash.empty?
+        request_params[:query] = options[:query]
 
         headers_hash = default_headers.merge(options.fetch(:headers, {}))
         request_params[:headers] = headers_hash unless headers_hash.empty?
