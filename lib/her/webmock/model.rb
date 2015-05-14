@@ -86,6 +86,8 @@ module Her
         end
 
         stub_associations(model_class, object)
+
+        request_stub
       end
 
       def stub_find(object, options = {})
@@ -107,6 +109,8 @@ module Her
         request_stub.with(request_params) unless request_params.empty?
 
         stub_associations(model_class, object)
+
+        request_stub
       end
 
       def stub_all(collection, options = {})
@@ -124,6 +128,8 @@ module Her
         request_stub.with(request_params) unless request_params.empty?
 
         collection.each { |object| stub_associations(model_class, object) }
+
+        request_stub
       end
     end
   end
