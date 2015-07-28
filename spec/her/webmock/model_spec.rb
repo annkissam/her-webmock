@@ -24,7 +24,7 @@ describe Her::WebMock::Model do
       let(:metadata_hash) { { total_count: 1, page: 1, per_page: 25 } }
 
       before do
-        ClassicModel.stub_all([classic_model], metadata: { metadata: metadata_hash })
+        ClassicModel.stub_all([classic_model], response_body: { metadata: metadata_hash })
       end
 
       it "returns the stub with metadata" do
