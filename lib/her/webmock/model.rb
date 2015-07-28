@@ -121,6 +121,8 @@ module Her
           model_class.pluralized_parsed_root_element => collection_attributes
         }
 
+        response = options[:metadata].merge(response) if options[:metadata]
+
         request_stub = stub_request(:get, model_class.use_api.base_uri + model_class.collection_path).
           to_return(body: JSON.generate(response), status: 200)
 
