@@ -6,16 +6,31 @@ describe Her::WebMock::Model do
   let(:classic_parent_model) { ClassicParentModel.new(id: 42) }
 
   context ".stub_all" do
-    before do
-      ClassicModel.stub_all([classic_model])
+    context "without metadata" do
+      before do
+        ClassicModel.stub_all([classic_model])
+      end
+
+      it "returns the stubs" do
+        model = ClassicModel.all.fetch
+        expect(model.size).to eq(1)
+
+        model = model.first
+        expect(model.fake_attr).to eq("Tissue")
+      end
     end
 
-    it "returns the stubs" do
-      model = ClassicModel.all.fetch
-      expect(model.size).to eq(1)
+    context "with metadata" do
+      let(:metadata_hash) { { total_count: 1, page: 1, per_page: 25 } }
 
-      model = model.first
-      expect(model.fake_attr).to eq("Tissue")
+      before do
+        ClassicModel.stub_all([classic_model], metadata: { metadata: metadata_hash })
+      end
+
+      it "returns the stub with metadata" do
+        model = ClassicModel.all.fetch
+        expect(model.metadata).to eq(metadata_hash)
+      end
     end
   end
 

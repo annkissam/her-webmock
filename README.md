@@ -37,7 +37,9 @@ stub_request("http://.../users/5").and_return("so much JSON string that includes
 # stub for .all
 User.stub_all([User.new(id: 5, name: 'user'), User.new(id: 6, name: "anon")])
 # passing extra params - these get passed to WebMock
-User.stub_all([User.new(id: 5, name: 'user')], query: hash_including({}), headers: { per_page: 12 })
+User.stub_all([User.new(id: 5, name: 'user')], query: hash_including({}), headers: { per_page: 12 }, metadata: { page: 1 })
+# adding additional data to the response
+User.stub_all([User.new(id: 5, name: 'user')], metadata: { page: 1, metadata: { additional: 'stuff' } })
 ```
 
 You can also easily define your own stub method matchers:
