@@ -74,7 +74,7 @@ module Her
 
         attributes_without_id = attributes.except(:id)
 
-        request_stub = stub_request(:post, model_class.use_api.base_uri + model_class.build_request_path(attributes_without_id)).
+        request_stub = stub_request(:post, model_class.use_api.options[:url] + model_class.build_request_path(attributes_without_id)).
           to_return(body: JSON.generate(response), status: 200)
 
         request_params = Helper.request_params(options)
@@ -102,7 +102,7 @@ module Her
           response = attributes
         end
 
-        request_stub = stub_request(:get, model_class.use_api.base_uri + model_class.build_request_path(attributes)).
+        request_stub = stub_request(:get, model_class.use_api.options[:url] + model_class.build_request_path(attributes)).
           to_return(body: JSON.generate(response), status: 200)
 
         request_params = Helper.request_params(options)
@@ -123,7 +123,7 @@ module Her
 
         response = options[:response_body].merge(response) if options[:response_body]
 
-        request_stub = stub_request(:get, model_class.use_api.base_uri + model_class.collection_path).
+        request_stub = stub_request(:get, model_class.use_api.options[:url] + model_class.collection_path).
           to_return(body: JSON.generate(response), status: 200)
 
         request_params = Helper.request_params(options)
