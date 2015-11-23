@@ -133,6 +133,33 @@ module Her
 
         request_stub
       end
+
+      def stub_destroy(object)
+        model_class = self
+
+        attributes = object.is_a?(Her::Model) ? Her::WebMock::Helper.attributes_without_embedded_associations(model_class, object) : object
+
+        request_stub = stub_request(:delete, model_class.use_api.options[:url] + model_class.build_request_path(attributes)).
+          to_return(body: "", status: 200)
+
+        request_stub.with({ query: nil }) unless request_params.empty?
+
+        request_stub
+      end
+
+      def stub_update(object, options = {})
+        model_class = self
+
+        attributes = object.is_a?(Her::Model) ? Her::WebMock::Helper.attributes_without_embedded_associations(model_class, object) : object
+
+        request_stub = stub_request(:put, model_class.use_api.options[:url] + model_class.build_request_path(attributes)).
+          to_return(body: "", status: 200)
+
+        request_params = { query: nil }.merge({ body: { consumer: attributes }})
+        request_stub.with(request_params) unless request_params.empty?
+
+        request_stub
+      end
     end
   end
 end
