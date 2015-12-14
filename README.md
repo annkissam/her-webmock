@@ -50,14 +50,14 @@ module Mocks
     include ::Her::WebMock::Model
 
     def stub_for_resource_type_and_resource_id(issues, resource_type, resource_id)
-      query_params = {
+      query = {
         'search' => {
           'resource_id_eq' => resource_id,
           'resource_type_eq' => resource_type
         }
       }
 
-      stub_all(issues, query_params: query_params)
+      stub_all(issues, query: query)
     end
 
     ...
