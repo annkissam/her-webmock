@@ -1,6 +1,7 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'her/webmock'
 require 'her/webmock/model'
+require 'webmock/rspec'
 
 require "her"
 
